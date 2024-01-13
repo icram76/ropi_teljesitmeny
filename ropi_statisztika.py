@@ -1,28 +1,71 @@
 from pynput import keyboard
 from datetime import datetime
 
+def count_occurrences(array, value):
+    count = 0
+    for row in array:
+        for element in row:
+            if element == value:
+                count += 1
+    return count
+
+def melyikcsapat (jatekos):
+    
+    if jatekos in a_csapat:
+        return 'A'
+
+    if jatekos in b_csapat:
+        return 'B'
+
+
+def menet_ertekelo(menet:list):
+    hibaszam = count_occurrences(menet, 'Hiba')
+    pont = count_occurrences(menet, 'pont')
+
+    if hibaszam + pont == 0:
+        print("Nincs pont a menetben")
+    
+    if hibaszam + pont > 1:
+        print("több mint 1 pont van a menetben")
+     
+    res = "" 
+
+    for esemeny in menet:
+        if esemeny[2] == 'Hiba': 
+            if melyikcsapat(esemeny[0]) == 'A':
+                res = "Pont B Csapatnak"
+            elif melyikcsapat(esemeny[0]) == 'B':
+                res = "Pont A Csapatnak"
+        elif esemeny[2] == 'pont':
+            if melyikcsapat(esemeny[0]) == 'A':
+                res = "Pont A Csapatnak"
+            elif melyikcsapat(esemeny[0]) == 'B':
+                res = "Pont B Csapatnak"
+    menet.append(res)
+    print(res)
+
 def kereses (kulcs):
     
     global statusz
     global esemeny
     global esemenyek
-    if statusz == 'J':
+    if statusz == 1:
         if kulcs in jatekosok:
-            statusz = 'A'
+            statusz = 2
             print(f'Játékos: {jatekosok[kulcs]}')
             esemeny.append(jatekosok[kulcs])
             return kulcs
     
-    if statusz == 'A':
+    if statusz == 2:
         if kulcs in akciok:
-            statusz = 'E'
+            statusz = 3
             print(f'Akcio: {akciok[kulcs]}')
             esemeny.append(akciok[kulcs])
             return kulcs
     
-    if statusz == 'E':
+    if statusz == 3:
         if kulcs in eredmenyek:
-            statusz = 'J'
+            statusz = 1
             print(f'Eredmény: {eredmenyek[kulcs]}')
             esemeny.append(eredmenyek[kulcs])
             esemenyek.append(esemeny)
@@ -31,12 +74,12 @@ def kereses (kulcs):
     
     return False
 
-
-
 def on_press(key):
     
     global key_hit_time 
-    global queue  
+    global queue
+    global esemenyek
+    global statusz
 
     try:
         char = key.char  # Megpróbáljuk karakterként kezelni a lenyomott billentyűt
@@ -48,6 +91,21 @@ def on_press(key):
 
     if kereses(char):
         queue.clear()
+    
+    # funkció billenytyűk
+    if key == keyboard.Key.enter:
+        labda_menet.append(esemenyek)
+        menet_ertekelo(esemenyek)
+        esemenyek = []
+ 
+    if key == keyboard.Key.f1:
+        print(esemenyek)
+    
+    if key == keyboard.Key.backspace:
+        if len(esemeny) > 0:
+            esemeny.pop()
+            statusz = statusz - 1
+            print(esemenyek)
 
     '''if char in jatekosok:
         print(f"Játékos: {jatekosok[char]}")
@@ -84,33 +142,36 @@ def on_release(key):
 if __name__ == "__main__":
     #fix változók feltöltése
     #akciok, eredmenyek, jatekosok változókban van a billentyű összerendelés
-    akciok = {'a': 'Támad',
+    akciok = {'t': 'Támad',
              's': 'Felad',              
              'n': 'Nyit',
              'f': 'Fogad',
-             'd': 'Véd',
+             'v': 'Véd',
              'b': 'Blokk'}
     eredmenyek = {'h':'Hiba',
                 's': 'Sikeres',
-                'p': 'próba'}
+                'p': 'pont',
+                'b': 'bravur',
+                'a': 'átüti'
+                }
     
     jatekosok = {'ba' : 'Bandi', 
-                   'cs' : 'Csiki', 
-                   'h': 'Hofi',
-                   'da': 'Deák Attila',
-                   'ka': 'kovács attila',
-                   'bo': 'Bongyi',
-                   'v': 'Vera',
-                   'kl': 'Kovács Laci',
-                   'ká': 'Áron',
-                   't': 'Marci',
-                   'má': 'Márkus Áron',
-                   'mc': 'Molnár Csabi',
-                   'mm': 'Molnár Mira',
-                   'bb': 'Bubu'}  
+                 'cs' : 'Csiki', 
+                 'h': 'Hofi',
+                 'da': 'Deák Attila',
+                 'ka': 'Kovács Attila',
+                 'bo': 'Bongyi',
+                 'v': 'Vera',
+                 'kl': 'Kovács Laci',
+                 'ká': 'Kovács Áron',
+                 't': 'Marci',
+                 'má': 'Márkus Áron',
+                 'mc': 'Molnár Csabi',
+                 'mm': 'Molnár Mira',
+                 'bb': 'Bubu'}  
     #csapat összeállítás jatekosok kulcsaival
-    a_csapat = {'ba', 'cs', 'h','da', 'ka', 'bo'}
-    b_csapat = {'v','kl', 'ká', 't', 'má', 'mc'}
+    a_csapat = {'Bandi', 'Csiki', 'Hofi','Deák Attila', 'Kovács Attila', 'Bongyi'}
+    b_csapat = {'Vera','Kovács Laci', 'Kovács Áron', 'Marci', 'Márkus Áron', 'Molnár Csabi'}
 
     queue = [] #leütött billentyű kódok tárolására
     esemeny = [] #játékos, akció, eredmény hármas tárolás, más szóval labda interakció ki, mit, hogyan
@@ -118,9 +179,9 @@ if __name__ == "__main__":
     labda_menet = [] # események sora, aminek a végén az egyik csapat pontot kap
     merkozes = [] #labda_menet-ek összessége
     key_hit_time =  datetime.now()
-    statusz = 'J'
+    statusz = 1
 
     with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
     
-    print(esemenyek)
+    print(labda_menet)
