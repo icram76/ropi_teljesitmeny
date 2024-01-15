@@ -39,6 +39,8 @@ labda_menet = [] # események sora, aminek a végén az egyik csapat pontot kap
 merkozes = [] #labda_menet-ek összessége
 key_hit_time =  datetime.now()
 statusz = 1
+a_pont = 0
+b_pont = 0
 
 def print_last_esemeny():
     ret = ""
@@ -66,31 +68,54 @@ def melyikcsapat (jatekos):
         return 'B'
 
 
-def menet_ertekelo(menet:list):
-    hibaszam = count_occurrences(menet, 'Hiba')
-    pont = count_occurrences(menet, 'pont')
+def menet_ertekelo():
+    '''
+    megvizsgálja, hogy az események között van-e pontot érő pont vagy hiba
+    RET: True ha van
+         False nincs pont
+    '''
+    global a_pont
+    global b_pont
+    global labda_menet
+    global esemenyek
+
+    hibaszam = 0
+    pont = count_occurrences(esemenyek, 'pont')
+
+    for esemeny in esemenyek:
+        if esemeny[2] == 'Hiba' and esemeny[1] in ['Támad', 'Nyit', 'Felad']: 
+            hibaszam +=1
 
     if hibaszam + pont == 0:
         print("Nincs pont a menetben")
+        return False
     
     if hibaszam + pont > 1:
-        print("több mint 1 pont van a menetben")
+        print("több mint 1 pont van a menetben, újra kell rögzíteni")
+        esemenyek = []
+        return False
      
     res = "" 
 
-    for esemeny in menet:
+    for esemeny in esemenyek:
         if esemeny[2] == 'Hiba' and esemeny[1] in ['Támad', 'Nyit', 'Felad']: 
             if melyikcsapat(esemeny[0]) == 'A':
+                b_pont += 1 
                 res = "Pont B Csapatnak"
             elif melyikcsapat(esemeny[0]) == 'B':
+                a_pont += 1
                 res = "Pont A Csapatnak"
         elif esemeny[2] == 'pont':
             if melyikcsapat(esemeny[0]) == 'A':
+                a_pont += 1
                 res = "Pont A Csapatnak"
             elif melyikcsapat(esemeny[0]) == 'B':
+                b_pont += 1
                 res = "Pont B Csapatnak"
-    menet.append(res)
+    esemenyek.append(str(a_pont)+':'+str(b_pont))
+    labda_menet.append(esemenyek)
     print(res)
+    return True
 
 def kereses (kulcs):
     
@@ -145,9 +170,8 @@ def key_press_handler(key):
     
     #Enterre labda menet vége
     if key.keysym == 'Return':
-        labda_menet.append(esemenyek)
-        menet_ertekelo(esemenyek)
-        esemenyek = []
+        if menet_ertekelo():
+            esemenyek = []
      
     if key.keysym == 'BackSpace':
         if len(esemeny) > 0:

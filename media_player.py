@@ -4,6 +4,7 @@ from tkinter import filedialog
 from datetime import timedelta
 from pynput import keyboard
 import ropi_esemeny_feldolgozo as r
+import tomb_mentes_olvasas as tmo 
 
 def on_press(key):
     global app
@@ -12,27 +13,33 @@ def on_press(key):
         app.rewind()
     
     if key.keysym == 'Right':
-        print('Bill: right')
         app.fast_forward()
     
     if key.keysym == 'space':
-        print('Bill: space')
         app.pause_video()
         
     if key.keysym == 'F1':
         print(r.esemenyek)
-        if len(app.esemenyek_text.get('1.0')) > 0:
-            app.esemenyek_text.delete('1.0', tk.END)
-        app.esemenyek_text.insert("1.0", " ".join(r.esemenyek[-1]) )
+    
+    if key.keysym == 'F2':
+        print(r.labda_menet)
 
     r.key_press_handler(key)
 
     if len(r.esemeny) == 0 and len(r.esemenyek) > 0:
-        if len(app.esemenyek_text.get('1.0')) > 0:
-            app.esemenyek_text.delete('1.0', tk.END)
-        app.esemenyek_text.insert("1.0", " ".join(r.esemenyek[-1]) )
+        app.esemenyek_text.delete('0', tk.END)
+        app.esemenyek_text.insert('0', " ".join(r.esemenyek[-1]) )
+        
+        app.labda_menet_text.delete('1.0', tk.END)
+        for esemeny in r.esemenyek:
+            app.labda_menet_text.insert(str(i)+".0"," ".join(esemeny))
+            i +=1
 
-
+    
+    #eredmény frissítése
+    if len(r.labda_menet) > 0:
+        app.eredmeny_text.delete('0', tk.END)
+        app.eredmeny_text.insert("0", r.labda_menet[-1][-1])
 
 def on_release(key):
     if key == keyboard.Key.esc:
@@ -70,7 +77,7 @@ class MediaPlayerApp(tk.Tk):
             font=("Arial", 12, "bold"),
             command=self.select_file,
         )
-        self.select_file_button.pack(pady=5)
+        self.select_file_button.pack(pady=1)
         self.time_label = tk.Label(
             self,
             text="00:00:00 / 00:00:00",
@@ -130,11 +137,26 @@ class MediaPlayerApp(tk.Tk):
         self.progress_bar = VideoProgressBar(
             self, self.set_video_position, bg="#e0e0e0", highlightthickness=0 
         )
-        self.progress_bar.pack(fill=tk.X, padx=10, pady=5)
+        self.progress_bar.pack(fill=tk.X, padx=10, pady=2)
+        
+        self.info_text_frame = tk.Frame(self, bg="#f0f0f0")
+        
+        self.info_text_frame.pack(side=tk.BOTTOM)
+        
+        self.esemenyek_text = tk.Entry(
+                                      self.info_text_frame,  
+                                      width= 20)
+        self.esemenyek_text.pack(side=tk.LEFT, padx= 5)
+        
+        self.labda_menet_text = tk.Text(self.info_text_frame,
+                                        height=5, width=40)
+        self.labda_menet_text.pack(side=tk.LEFT)
 
-        self.esemenyek_text = tk.Text(height= 5
-                                      )
-        self.esemenyek_text.pack()
+        self.eredmeny_label = tk.Label(self.info_text_frame, text="Eredmény:")
+        self.eredmeny_label.pack(side=tk.LEFT, padx=3)
+        self.eredmeny_text = tk.Entry(self.info_text_frame,
+                                      width=5)
+        self.eredmeny_text.pack(side=tk.LEFT)
     
     def select_file(self):
         file_path = filedialog.askopenfilename(
@@ -228,7 +250,8 @@ if __name__ == "__main__":
     app = MediaPlayerApp()
     app.update_video_progress()
     app.mainloop()
-    
+    print(r.labda_menet)
+    #tmo.tomb_mentese_allomanyba(r.labda_menet,'labdamenet.txt')
     
     
     
