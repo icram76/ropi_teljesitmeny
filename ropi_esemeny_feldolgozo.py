@@ -9,9 +9,9 @@ akciok = {'t': 'Támad',
             'b': 'Blokk'}
 eredmenyek = {'h':'Hiba',
             's': 'Sikeres',
-            'p': 'pont',
-            'b': 'bravur',
-            'a': 'átüti'
+            'p': 'Pont',
+            'b': 'Bravúr',
+            'u': 'Ügyetlen'
             }
 
 jatekosok = {'ba' : 'Bandi', 
@@ -35,7 +35,8 @@ b_csapat = {'Vera','Kovács Laci', 'Kovács Áron', 'Marci', 'Márkus Áron', 'M
 queue = [] #leütött billentyű kódok tárolására
 esemeny = [] #játékos, akció, eredmény hármas tárolás, más szóval labda interakció ki, mit, hogyan
 esemenyek = [] #játék menete, érintések v események sora
-labda_menet = [] # események sora, aminek a végén az egyik csapat pontot kap
+labda_menet = {} # események sora, aminek a végén az egyik csapat pontot kap
+labdamenetek = []
 merkozes = [] #labda_menet-ek összessége
 key_hit_time =  datetime.now()
 statusz = 1
@@ -112,8 +113,10 @@ def menet_ertekelo():
             elif melyikcsapat(esemeny[0]) == 'B':
                 b_pont += 1
                 res = "Pont B Csapatnak"
-    esemenyek.append(str(a_pont)+':'+str(b_pont))
-    labda_menet.append(esemenyek)
+    
+    #labda_menet.append(esemenyek)
+    labda_menet["pont"] = str(a_pont)+':'+str(b_pont)
+    labda_menet["menet"] = esemenyek
     print(res)
     return True
 
@@ -138,21 +141,24 @@ def kereses (kulcs):
     
     if statusz == 3:
         if kulcs in eredmenyek:
-            statusz = 1
-            print(f'Eredmény: {eredmenyek[kulcs]}')
-            esemeny.append(eredmenyek[kulcs])
-            esemenyek.append(esemeny)
-            esemeny = []
-            return kulcs
+            if not (kulcs == 'p' and esemeny[1] not in ['Nyit','Támad', 'Blokk']):
+                statusz = 1
+                print(f'Eredmény: {eredmenyek[kulcs]}')
+                esemeny.append(eredmenyek[kulcs])
+                esemenyek.append(esemeny)
+                esemeny = []
+                return kulcs
     
     return False
 
-def key_press_handler(key):
+def key_press_handler(key, time):
     
     global key_hit_time 
     global queue
     global esemenyek
     global statusz
+    global labdamenetek
+    global labda_menet
 
     try:
         char = key.char  # Megpróbáljuk karakterként kezelni a lenyomott billentyűt
@@ -171,6 +177,10 @@ def key_press_handler(key):
     #Enterre labda menet vége
     if key.keysym == 'Return':
         if menet_ertekelo():
+            if time:
+                labda_menet["ido"] = time
+            labdamenetek.append(labda_menet)
+            labda_menet = {}
             esemenyek = []
      
     if key.keysym == 'BackSpace':
@@ -201,4 +211,17 @@ def key_press_handler(key):
 
     key_hit_time =  datetime.now()
         
+def kiertekel():
+    global jatekosok
+    global labdamenetek
+
+    statisztika = []
+
+    for jatekos in jatekosok:
+        for labdamenet in labdamenetek:
+            for menet in labdamenet["menet"]:
+                if menet[0] == jatekos:
+                    menet[1]            #Nyit|Támas|...
+                    statisztika.append
+
 

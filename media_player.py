@@ -4,7 +4,8 @@ from tkinter import filedialog
 from datetime import timedelta
 from pynput import keyboard
 import ropi_esemeny_feldolgozo as r
-import tomb_mentes_olvasas as tmo 
+import tomb_mentes_olvasas as tmo
+import os
 
 def on_press(key):
     global app
@@ -19,27 +20,38 @@ def on_press(key):
         app.pause_video()
         
     if key.keysym == 'F1':
+        print ("esemenyek")
         print(r.esemenyek)
     
     if key.keysym == 'F2':
+        print ("labda_menet")
         print(r.labda_menet)
+    
+    if key.keysym == 'F3':
+        print(r.labdamenetek)
 
-    r.key_press_handler(key)
+    if key.keysym == 'F5':
+        r.labda_menet = []
+
+    r.key_press_handler(key,app.media_player.get_time())
 
     if len(r.esemeny) == 0 and len(r.esemenyek) > 0:
         app.esemenyek_text.delete('0', tk.END)
         app.esemenyek_text.insert('0', " ".join(r.esemenyek[-1]) )
         
         app.labda_menet_text.delete('1.0', tk.END)
-        for esemeny in r.esemenyek:
-            app.labda_menet_text.insert(str(i)+".0"," ".join(esemeny))
-            i +=1
-
-    
+        
+        text_to_labda_menet = ""
+        for menet in r.labdamenetek:
+            text_to_labda_menet += menet["pont"]
+            text_to_labda_menet += "\n"
+        
+        app.labda_menet_text.insert('1.0', text_to_labda_menet)
+               
     #eredmény frissítése
-    if len(r.labda_menet) > 0:
+    if  len(r.labdamenetek) >0: 
         app.eredmeny_text.delete('0', tk.END)
-        app.eredmeny_text.insert("0", r.labda_menet[-1][-1])
+        app.eredmeny_text.insert('0', r.labdamenetek[-1].get('pont'))
 
 def on_release(key):
     if key == keyboard.Key.esc:
@@ -48,7 +60,9 @@ def on_release(key):
 
 
 class MediaPlayerApp(tk.Tk):
-            
+
+    file_path = ""
+
     def __init__(self):
         super().__init__()
 
@@ -147,9 +161,12 @@ class MediaPlayerApp(tk.Tk):
                                       self.info_text_frame,  
                                       width= 20)
         self.esemenyek_text.pack(side=tk.LEFT, padx= 5)
-        
+        self.scroll = tk.Scrollbar()        
         self.labda_menet_text = tk.Text(self.info_text_frame,
-                                        height=5, width=40)
+                                        height=5, 
+                                        width=40,
+                                        yscrollcommand=self.scroll.set
+                                        )
         self.labda_menet_text.pack(side=tk.LEFT)
 
         self.eredmeny_label = tk.Label(self.info_text_frame, text="Eredmény:")
@@ -247,11 +264,24 @@ class VideoProgressBar(tk.Scale):
             self.set(value)
     
 if __name__ == "__main__":
+
+    filename = "labda_menet.json"
+
+    if os.path.isfile(filename):
+        r.labdamenetek = tmo.file_to_json(filename)
+        print("labda_menet feltöltve")
+        print(r.labdamenetek)
+        if r.labdamenetek:
+            r.a_pont = int(r.labdamenetek[-1]['pont'].split(sep=':')[0])
+            r.b_pont = int(r.labdamenetek[-1]['pont'].split(sep=':')[1])
+            print(f"Beolvasott eredmény: {r.a_pont}:{r.b_pont}")
     app = MediaPlayerApp()
     app.update_video_progress()
     app.mainloop()
     print(r.labda_menet)
-    #tmo.tomb_mentese_allomanyba(r.labda_menet,'labdamenet.txt')
+    #tmo.tomb_to_file(r.labda_menet, filename)
+    #tmo.tomb_mentese_allomanyba(r.labda_menet,filename)
+    tmo.json_to_file(r.labdamenetek, filename)
     
     
     
