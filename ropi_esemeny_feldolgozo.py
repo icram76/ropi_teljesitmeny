@@ -211,17 +211,36 @@ def key_press_handler(key, time):
 
     key_hit_time =  datetime.now()
         
+def torol_statisztika():
+    stat= {}
+    akciok_nevek = list(akciok.values())
+    eredmeny_nevek = list(eredmenyek.values())
+
+    
+    for akcio in akciok_nevek:
+        for eredmeny in eredmeny_nevek:
+            stat[akcio+":"+eredmeny] = 0
+    
+    return stat
+
 def kiertekel():
     global jatekosok
     global labdamenetek
 
-    statisztika = []
-
-    for jatekos in jatekosok:
+    jatekosok_neve = list(jatekosok.values())
+    
+    for jatekos in jatekosok_neve:
+        
+        row = []
+        statisztika = torol_statisztika()
         for labdamenet in labdamenetek:
             for menet in labdamenet["menet"]:
                 if menet[0] == jatekos:
-                    menet[1]            #Nyit|Támas|...
-                    statisztika.append
+                    key_akcio = menet[1]
+                    key_eredmeny = menet[2]
+                    key = menet[1] + ":" + menet[2]
+                    statisztika[key] +=1
 
-
+        row.append(jatekos)
+        row.append(statisztika)
+        print(row)
