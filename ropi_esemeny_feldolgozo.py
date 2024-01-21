@@ -19,7 +19,7 @@ jatekosok = {'ba' : 'Bandi',
                 'h': 'Hofi',
                 'da': 'Deák Attila',
                 'ka': 'Kovács Attila',
-                'bo': 'Bongyi',
+                'bo': 'Bongyi',     
                 'v': 'Vera',
                 'kl': 'Kovács Laci',
                 'ká': 'Kovács Áron',
@@ -69,7 +69,7 @@ def melyikcsapat (jatekos):
         return 'B'
 
 
-def menet_ertekelo():
+def menet_ertekelo(): 
     '''
     megvizsgálja, hogy az események között van-e pontot érő pont vagy hiba
     RET: True ha van
@@ -81,7 +81,7 @@ def menet_ertekelo():
     global esemenyek
 
     hibaszam = 0
-    pont = count_occurrences(esemenyek, 'pont')
+    pont = count_occurrences(esemenyek, 'Pont')
 
     for esemeny in esemenyek:
         if esemeny[2] == 'Hiba' and esemeny[1] in ['Támad', 'Nyit', 'Felad']: 
@@ -106,7 +106,7 @@ def menet_ertekelo():
             elif melyikcsapat(esemeny[0]) == 'B':
                 a_pont += 1
                 res = "Pont A Csapatnak"
-        elif esemeny[2] == 'pont':
+        elif esemeny[2] == 'Pont':
             if melyikcsapat(esemeny[0]) == 'A':
                 a_pont += 1
                 res = "Pont A Csapatnak"

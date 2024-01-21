@@ -38,15 +38,8 @@ def on_press(key):
     if len(r.esemeny) == 0 and len(r.esemenyek) > 0:
         app.esemenyek_text.delete('0', tk.END)
         app.esemenyek_text.insert('0', " ".join(r.esemenyek[-1]) )
-        
-        app.labda_menet_text.delete('1.0', tk.END)
-        
-        text_to_labda_menet = ""
-        for menet in r.labdamenetek:
-            text_to_labda_menet += menet["pont"]
-            text_to_labda_menet += "\n"
-        
-        app.labda_menet_text.insert('1.0', text_to_labda_menet)
+        app.text_menetek.data = r.esemenyek
+        app.text_menetek.update_widgets()   
                
     #eredmény frissítése
     if  len(r.labdamenetek) >0: 
@@ -58,6 +51,38 @@ def on_release(key):
         print("Kilépés")
         return False
 
+
+class TextWidgetManager:
+
+    def __init__(self, root):
+        self.root = root
+        self.data = []  # Tömb adatainak tárolására
+        self.text_widgets = []
+
+        # Text widget-ek létrehozása és adataik hozzáadása a "data" tömbhöz
+        for i in range(5):
+            text_widget = tk.Text(root, height=1, width=30)
+            text_widget.pack(pady=1)
+            #self.data.append(f'Text Widget {i + 1}')
+            #text_widget.insert(tk.END, self.data[i])
+            text_widget.config(state=tk.DISABLED)
+            self.text_widgets.append(text_widget)
+
+    def update_widgets(self):
+        # Az utolsó 5 elem beállítása az utolsó 5 Text widget-re
+        for i in range(5):
+            text_widget_index = len(self.data) - i - 1 #fent van az utolsó
+            text_widget_index = len(self.data) - (abs(i - 5)) # lent van az utolsó
+            text_widget = self.text_widgets[i]
+            text_widget.config(state=tk.NORMAL)
+            text_widget.delete(1.0, tk.END)
+            if text_widget_index >= 0:
+                text_widget.insert(tk.END, self.data[text_widget_index])
+                text_widget.config(state=tk.DISABLED)
+    
+    def delete(self):
+        for i in range(5):
+            self.text_widgets[i].delete(1.0, tk.END)
 
 class MediaPlayerApp(tk.Tk):
 
@@ -155,25 +180,22 @@ class MediaPlayerApp(tk.Tk):
         
         self.info_text_frame = tk.Frame(self, bg="#f0f0f0")
         
-        self.info_text_frame.pack(side=tk.BOTTOM)
+        self.info_text_frame.pack(side=tk.LEFT)
         
         self.esemenyek_text = tk.Entry(
                                       self.info_text_frame,  
-                                      width= 20)
+                                      width= 20,
+                                      state=tk.DISABLED)
         self.esemenyek_text.pack(side=tk.LEFT, padx= 5)
         self.scroll = tk.Scrollbar()        
-        self.labda_menet_text = tk.Text(self.info_text_frame,
-                                        height=5, 
-                                        width=40,
-                                        yscrollcommand=self.scroll.set
-                                        )
-        self.labda_menet_text.pack(side=tk.LEFT)
-
+        
         self.eredmeny_label = tk.Label(self.info_text_frame, text="Eredmény:")
         self.eredmeny_label.pack(side=tk.LEFT, padx=3)
         self.eredmeny_text = tk.Entry(self.info_text_frame,
                                       width=5)
         self.eredmeny_text.pack(side=tk.LEFT)
+
+        self.text_menetek = TextWidgetManager(self.info_text_frame)     
     
     def select_file(self):
         file_path = filedialog.askopenfilename(
