@@ -173,6 +173,15 @@ class MediaPlayerApp(tk.Tk):
             command=self.rewind,
         )
         self.rewind_button.pack(side=tk.LEFT, pady=5)
+        self.jump_last_button = tk.Button(
+            self.control_buttons_frame,
+            text="Jump",
+            font=("Arial", 12, "bold"),
+            bg="#2196F3",
+            fg="white",
+            command=self.jump,
+        )
+        self.jump_last_button.pack(side=tk.LEFT, pady=5)
         self.progress_bar = VideoProgressBar(
             self, self.set_video_position, bg="#e0e0e0", highlightthickness=0 
         )
@@ -230,6 +239,12 @@ class MediaPlayerApp(tk.Tk):
         if self.playing_video:
             current_time = self.media_player.get_time() - 10000
             self.media_player.set_time(current_time)
+    
+    def jump(self):
+        if self.playing_video:
+            if r.labdamenetek:
+                if r.labdamenetek[-1]["ido"] != -1:
+                    self.media_player.set_time(r.labdamenetek[-1]["ido"])
 
     def pause_video(self):
         if self.playing_video:
@@ -304,6 +319,7 @@ if __name__ == "__main__":
     #tmo.tomb_to_file(r.labda_menet, filename)
     #tmo.tomb_mentese_allomanyba(r.labda_menet,filename)
     tmo.json_to_file(r.labdamenetek, filename)
+    r.kiertekel()
     
     
     
