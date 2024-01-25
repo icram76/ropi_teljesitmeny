@@ -6,6 +6,19 @@ from pynput import keyboard
 import ropi_esemeny_feldolgozo as r
 import tomb_mentes_olvasas as tmo
 import os
+from pathlib import Path
+
+global filename
+
+def fill_labdamenetek(file_name):
+    if os.path.isfile(file_name):
+        r.labdamenetek = tmo.file_to_json(file_name)
+        print("labdamenetek feltöltve innen: " + file_name)
+        print(r.labdamenetek)
+        if r.labdamenetek:
+            r.a_pont = int(r.labdamenetek[-1]['pont'].split(sep=':')[0])
+            r.b_pont = int(r.labdamenetek[-1]['pont'].split(sep=':')[1])
+            print(f"Beolvasott eredmény: {r.a_pont}:{r.b_pont}")
 
 def on_press(key):
     global app
@@ -30,14 +43,21 @@ def on_press(key):
     if key.keysym == 'F3':
         print(r.labdamenetek)
 
-    if key.keysym == 'F5':
+    if key.keysym == 'BackSpace':
+        r.esemenyek.pop()
+
+    if key.keysym == '':
         r.labda_menet = []
 
     r.key_press_handler(key,app.media_player.get_time())
 
+    
+    app.esemenyek_text.delete('0', tk.END)
+    app.esemenyek_text.insert('0', r.esemeny)
+
     if len(r.esemeny) == 0 and len(r.esemenyek) > 0:
-        app.esemenyek_text.delete('0', tk.END)
-        app.esemenyek_text.insert('0', " ".join(r.esemenyek[-1]) )
+        #app.esemenyek_text.delete('0', tk.END)
+        #app.esemenyek_text.insert('0', " ".join(r.esemenyek[-1]) )
         app.text_menetek.data = r.esemenyek
         app.text_menetek.update_widgets()   
                
@@ -76,7 +96,7 @@ class TextWidgetManager:
             text_widget = self.text_widgets[i]
             text_widget.config(state=tk.NORMAL)
             text_widget.delete(1.0, tk.END)
-            if text_widget_index >= 0:
+            if text_widget_index >= 0:                
                 text_widget.insert(tk.END, self.data[text_widget_index])
                 text_widget.config(state=tk.DISABLED)
     
@@ -92,7 +112,7 @@ class MediaPlayerApp(tk.Tk):
         super().__init__()
 
         self.title("Media Player")
-        self.geometry("800x700")
+        self.geometry("1600x1000")
         self.configure(bg="#f0f0f0")
         self.initialize_player()
 
@@ -172,41 +192,46 @@ class MediaPlayerApp(tk.Tk):
             fg="white",
             command=self.rewind,
         )
-        self.rewind_button.pack(side=tk.LEFT, pady=5)
+        self.rewind_button.pack(side=tk.LEFT, padx=10, pady=5)
         self.jump_last_button = tk.Button(
             self.control_buttons_frame,
             text="Jump",
             font=("Arial", 12, "bold"),
-            bg="#2196F3",
+            bg="#f803fc",
             fg="white",
             command=self.jump,
         )
         self.jump_last_button.pack(side=tk.LEFT, pady=5)
+
         self.progress_bar = VideoProgressBar(
             self, self.set_video_position, bg="#e0e0e0", highlightthickness=0 
         )
         self.progress_bar.pack(fill=tk.X, padx=10, pady=2)
         
-        self.info_text_frame = tk.Frame(self, bg="#f0f0f0")
         
+        self.info_text_frame = tk.Frame(self, bg="#f0f0f0")
         self.info_text_frame.pack(side=tk.LEFT)
         
         self.esemenyek_text = tk.Entry(
                                       self.info_text_frame,  
                                       width= 20,
-                                      state=tk.DISABLED)
-        self.esemenyek_text.pack(side=tk.LEFT, padx= 5)
-        self.scroll = tk.Scrollbar()        
+                                      state=tk.NORMAL)
+        self.esemenyek_text.pack(side=tk.LEFT, )
+                
+        
+        self.text_menetek = TextWidgetManager(self.info_text_frame)
         
         self.eredmeny_label = tk.Label(self.info_text_frame, text="Eredmény:")
         self.eredmeny_label.pack(side=tk.LEFT, padx=3)
         self.eredmeny_text = tk.Entry(self.info_text_frame,
                                       width=5)
-        self.eredmeny_text.pack(side=tk.LEFT)
+        self.eredmeny_text.pack(side=tk.LEFT
+                                , padx= 5)
 
-        self.text_menetek = TextWidgetManager(self.info_text_frame)     
+
     
     def select_file(self):
+        global filename
         file_path = filedialog.askopenfilename(
             filetypes=[("Media Files", "*.mp4 *.avi")]
         )
@@ -214,6 +239,8 @@ class MediaPlayerApp(tk.Tk):
             self.current_file = file_path
             self.time_label.config(text="00:00:00 / " + self.get_duration_str())
             self.play_video()
+            filename = Path(file_path).stem+".json"
+            fill_labdamenetek(filename)
     
     def get_duration_str(self):
         if self.playing_video:
@@ -269,6 +296,7 @@ class MediaPlayerApp(tk.Tk):
             total_duration = self.media_player.get_length()
             position = int((float(value) / 100) * total_duration)
             self.media_player.set_time(position)
+            #to_do eredmény jelzőn frissüljön be az állás
     
     def update_video_progress(self):
         if self.playing_video:
@@ -303,15 +331,8 @@ class VideoProgressBar(tk.Scale):
 if __name__ == "__main__":
 
     filename = "labda_menet.json"
-
-    if os.path.isfile(filename):
-        r.labdamenetek = tmo.file_to_json(filename)
-        print("labda_menet feltöltve")
-        print(r.labdamenetek)
-        if r.labdamenetek:
-            r.a_pont = int(r.labdamenetek[-1]['pont'].split(sep=':')[0])
-            r.b_pont = int(r.labdamenetek[-1]['pont'].split(sep=':')[1])
-            print(f"Beolvasott eredmény: {r.a_pont}:{r.b_pont}")
+    fill_labdamenetek(filename)
+    
     app = MediaPlayerApp()
     app.update_video_progress()
     app.mainloop()
@@ -319,7 +340,7 @@ if __name__ == "__main__":
     #tmo.tomb_to_file(r.labda_menet, filename)
     #tmo.tomb_mentese_allomanyba(r.labda_menet,filename)
     tmo.json_to_file(r.labdamenetek, filename)
-    r.kiertekel()
+    #r.kiertekel()
     
     
     

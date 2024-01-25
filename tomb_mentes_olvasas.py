@@ -14,6 +14,7 @@ def file_to_tomb(file):
 def json_to_file(data, filename):
     with open(filename, 'w') as convert_file: 
         convert_file.write(json.dumps(data, indent=2))
+    print("mentés ide:"+ filename)
 
 def file_to_json (filename):
     try:
